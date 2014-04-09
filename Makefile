@@ -1,21 +1,30 @@
 CC=gcc
-CFLAGS=-Wall -g 
-EXECUTABLE=calc
-LINK=-lrt
-SRC=master.c 
-SRC1=child.c
-EX1=child
-all: $(EXECUTABLE)
+CFLAGS+=-Wall -g -Werror
+M_SRC=$(wildcard src/master/*.c) $(wildcard src/master/*.h)
+M_OBJS=$(M_SRC:.c=.o)
+MASTER=master
+C_SRC=$(wildcard src/child/*.c)
+C_OBJS=$(C_SRC:.c=.o)
+CHILD=child
 
-$(EXECUTABLE): $(SRC) $(SRC1)
-	$(CC) $(CFLAGS) $(SRC) -o $(EXECUTABLE) $(LINK)
-	$(CC) $(CFLAGS) $(SRC1) -o $(EX1) $(LINK)
+all: $(MASTER) $(CHILD)
+
+$(MASTER): $(M_OBJS)
+	$(CC) $(M_OBJS) -o $(MASTER)
+$(CHILD): $(C_OBJS)
+	$(CC) $(C_OBJS) -o $(CHILD)
 run:
-	./$(EXECUTABLE)
+	./$(PROGRAM)
 clean:
-	rm -f $(EXECUTABLE) *~ 
-	rm -f $(EXECUTABLE) *.o
-	rm -f child *.o
-	rm -f child *~
+	rm -f $(MASTER) $(CHILD)
 
+.PHONY: all test t
+
+M_tests: 
+	checkmk test/master/test_master.check > test/master/test_master.c
+	$(CC) src/master/master.c test/master/test_master.c -lcheck -o test/master/master
+
+
+M_test:
+	./test/master/master
 

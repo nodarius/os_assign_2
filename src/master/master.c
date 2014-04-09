@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 
+const int LINE_LENGTH = 50;
+
 
 /*
  * if input equals "calc" - returns 1
@@ -15,17 +17,24 @@ int calc_entered(char *input)
   return 0;
 }
 
-
-
-int main(int argc, char **argv)
+int valid_input(char *input)
 {
-  char input[20];
+  return 0;
+}
+
+int main1(int argc, char **argv)
+{
+  char input[LINE_LENGTH + 1];
   while(1) {
-    fgets(input, 20, stdin);
+    fgets(input, LINE_LENGTH, stdin);
     if (calc_entered(input)) {
       printf("calc entered\n");
+      break;
+    }
+    if (valid_input(input)) {
+      printf("valid\n");
     }
   }
-  
+
   return 0;
 }
