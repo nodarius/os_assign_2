@@ -1,3 +1,4 @@
+
 #test calc_entered_test
 ck_assert_msg(calc_entered("calc") == 1, "calc\n");
 ck_assert_msg(calc_entered("calc\n") == 1, "calc\n");
@@ -24,5 +25,11 @@ ck_assert(valid_input("+3") == 0);
 ck_assert(valid_input("3 34 + 43") == 0);
 
 
-
-
+#test save_input_test
+#include "src/master/master.c"
+struct inputs_t inputs;
+inputs.n_elem = 0;
+inputs.n_alloc = 0;
+save_input(&inputs, "eminem");
+ck_assert(inputs.n_elem == 1);
+ck_assert(strcmp(inputs.data[0], "eminem") == 0);

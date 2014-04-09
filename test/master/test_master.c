@@ -6,9 +6,10 @@
 #include <check.h>
 
 #line 1 "test/master/test_master.check"
+
 START_TEST(calc_entered_test)
 {
-#line 2
+#line 3
 ck_assert_msg(calc_entered("calc") == 1, "calc\n");
 ck_assert_msg(calc_entered("calc\n") == 1, "calc\n");
 ck_assert_msg(calc_entered("calc\0") == 1, "calc\n");
@@ -21,7 +22,7 @@ END_TEST
 
 START_TEST(valid_input_test)
 {
-#line 10
+#line 11
 ck_assert(valid_input("2+2") == 1);
 ck_assert(valid_input("2-3") == 1);
 ck_assert(valid_input("2*276") == 1);
@@ -39,8 +40,21 @@ ck_assert(valid_input("+3") == 0);
 ck_assert(valid_input("3 34 + 43") == 0);
 
 
+}
+END_TEST
 
-
+START_TEST(save_input_test)
+{
+#line 29
+#include "src/master/master.c"
+struct inputs_t inputs;
+inputs.n_elem = 0;
+inputs.n_alloc = 0;
+char *input = "eminem";
+save_input(&inputs, "eminems");
+ck_assert(inputs.n_elem == 1);
+ck_assert(strcmp(inputs.data[0], input) == 0);
+ck_assert(strcmp(inputs.data[0], "eminem") == 0);
 }
 END_TEST
 
@@ -54,6 +68,7 @@ int main(void)
     suite_add_tcase(s1, tc1_1);
     tcase_add_test(tc1_1, calc_entered_test);
     tcase_add_test(tc1_1, valid_input_test);
+    tcase_add_test(tc1_1, save_input_test);
 
     srunner_run_all(sr, CK_ENV);
     nf = srunner_ntests_failed(sr);

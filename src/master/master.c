@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 const int LINE_LENGTH = 50;
 
@@ -83,8 +84,40 @@ int valid_input(char *input)
 }
 
 
+struct inputs_t{
+  char **data;
+  int n_alloc;
+  int n_elem;
+};
+
+
+/*
+ * adds char *input to inputs_t struct's array (doesn't copy it)
+ * increases inputs_t->data size if needed;
+ */
+int save_input(struct inputs_t *inputs, char *input)
+{
+  if (inputs->n_elem == inputs->n_alloc) {
+    if (inputs->n_alloc == 0) {
+      inputs->data = malloc(10 * sizeof(int*));
+      inputs->n_alloc = 10;
+    } else {
+      int new_size = inputs->n_alloc * 2;
+      inputs->data = realloc(inputs->data, new_size);
+      inputs->n_alloc = new_size;
+    }
+  }
+  inputs->data[inputs->n_elem] = input;
+  inputs->n_elem++;
+  return 0;
+}
+
 int main1(int argc, char **argv)
 {
+  struct inputs_t inputs;
+  inputs.n_elem = 0;
+  inputs.n_alloc = 0;
+
   char input[LINE_LENGTH + 1];
   while(1) {
     fgets(input, LINE_LENGTH, stdin);
@@ -93,6 +126,8 @@ int main1(int argc, char **argv)
       break;
     }
     if (valid_input(input)) {
+      char *ch = strdup(input);
+      save_input(&inputs, ch);
       printf("valid\n");
     }
   }
