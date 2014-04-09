@@ -22,7 +22,7 @@ clean:
 
 M_tests: 
 	checkmk test/master/test_master.check > test/master/test_master.c
-	$(CC) src/master/master.c test/master/test_master.c -lcheck -o test/master/master
+	$(CC) -g src/master/master.c test/master/test_master.c -lcheck -o test/master/master
 
 
 M_test:

@@ -24,11 +24,21 @@ START_TEST(valid_input_test)
 #line 10
 ck_assert(valid_input("2+2") == 1);
 ck_assert(valid_input("2-3") == 1);
-ck_assert(valid_input("2*2") == 1);
-ck_assert(valid_input("2/3") == 1);
+ck_assert(valid_input("2*276") == 1);
+ck_assert(valid_input("234/3") == 1);
 ck_assert(valid_input("2:3") == 1);
-ck_assert(valid_input("2//3") == 1);
-ck_assert(valid_input("2::3") == 1);
+ck_assert(valid_input(" 3 +   834 ") == 1);
+ck_assert(valid_input("-3-43") == 1);
+ck_assert(valid_input("2//3") == 0);
+ck_assert(valid_input("2343") == 0);
+ck_assert(valid_input("a-2") == 0);
+ck_assert(valid_input("4-2=") == 0);
+ck_assert(valid_input("") == 0);
+ck_assert(valid_input("=") == 0);
+ck_assert(valid_input("+3") == 0);
+ck_assert(valid_input("3 34 + 43") == 0);
+
+
 
 
 }
