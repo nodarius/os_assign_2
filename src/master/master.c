@@ -6,14 +6,17 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <unistd.h>
 
 const int LINE_LENGTH = 50;
 const char *QUEUE_NAME = "/M_QUEUE";
+const int N_CHILD = 2;
+
 /*
  * if input equals "calc" - returns 1
  * else returns 0
  */
-int calc_entered(char *input)
+int calc_entered(const char *input)
 {
   if(!strncmp("calc", input, 4)) {
     if (input[4] == '\0' || input[4] == '\n')
@@ -29,7 +32,7 @@ int calc_entered(char *input)
  * returns 1 if input is valid
  * 0 otherwise
  */
-int valid_input(char *input)
+int valid_input(const char *input)
 {
   if (input == NULL || strlen(input) < 3) return 0;
   int len = strlen(input);
@@ -160,10 +163,35 @@ int add_to_queue(struct inputs_t *inputs, mqd_t mqd)
   return 0;
 }
 
+/*
+ * creates new child process and returns it's ID to parent
+ * 
+ */
+pid_t create_child()
+{
+  pid_t pid = fork();
+  if (pid == (pid_t) -1) {
+    perror("fork");
+    exit(-1);
+  }
+  if (pid == 0) { // child
+    char *arg1 = strdup(QUEUE_NAME);
+    char *new_arg[] = {"./child", arg1};
+    char *new_env[] = {NULL};
+    execve("child", new_arg, new_env);
+    perror("execve"); // execve doesn't return on success
+    exit(-1);
+  } else { // parent
+    return pid; // child id;
+  }
+}
+
 
 int main1(int argc, char **argv)
 {
   mqd_t mqd = create_mqueue();
+  pid_t child1 = create_child();
+
 
   struct inputs_t inputs;
   inputs.n_elem = 0;
