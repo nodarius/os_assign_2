@@ -1,20 +1,21 @@
 CC=gcc
-CFLAGS+=-Wall -g -Werror
+CFLAGS+=-Wall -g 
 M_SRC=$(wildcard src/master/*.c) $(wildcard src/master/*.h)
 M_OBJS=$(M_SRC:.c=.o)
 MASTER=master
 C_SRC=$(wildcard src/child/*.c)
 C_OBJS=$(C_SRC:.c=.o)
 CHILD=child
+LINK=-lrt
 
 all: $(MASTER) $(CHILD)
 
 $(MASTER): $(M_OBJS)
-	$(CC) $(M_OBJS) -o $(MASTER)
+	$(CC) $(M_OBJS) $(LINK) -o $(MASTER)
 $(CHILD): $(C_OBJS)
 	$(CC) $(C_OBJS) -o $(CHILD)
 run:
-	./$(PROGRAM)
+	./$(MASTER)
 clean:
 	rm -f $(MASTER) $(CHILD)
 
@@ -22,7 +23,7 @@ clean:
 
 M_tests: 
 	checkmk test/master/test_master.check > test/master/test_master.c
-	$(CC) -g -I./ src/master/master.c test/master/test_master.c -lcheck -o test/master/master
+	$(CC) -g -I./ src/master/master.c test/master/test_master.c -lcheck -o test/master/master $(LINK)
 
 
 M_test:

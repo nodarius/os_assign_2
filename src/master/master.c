@@ -2,10 +2,13 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <mqueue.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
 
 const int LINE_LENGTH = 50;
-
-
+const char *QUEUE_NAME = "/M_QUEUE";
 /*
  * if input equals "calc" - returns 1
  * else returns 0
@@ -90,7 +93,6 @@ struct inputs_t{
   int n_elem;
 };
 
-
 /*
  * adds char *input to inputs_t struct's array (doesn't copy it)
  * increases inputs_t->data size if needed;
@@ -112,8 +114,57 @@ int save_input(struct inputs_t *inputs, char *input)
   return 0;
 }
 
+
+
+int create_mqueue()
+{
+  int flags;
+  mqd_t mqd;
+  struct mq_attr attr;
+
+  attr.mq_maxmsg = 10;
+  attr.mq_msgsize = 50;
+  flags = O_RDWR | O_CREAT;
+
+  umask(0);
+  mqd = mq_open(QUEUE_NAME, flags, 0666, &attr);
+
+  if (mqd == (mqd_t) -1) {
+    printf("error number: %d", errno);
+    perror("mq_open");
+    exit(-1);
+  }
+
+  return mqd;
+}
+
+/*
+ * adds all char*-s from inputs->data to mqd
+ * and frees inputs->data;
+ */
+int add_to_queue(struct inputs_t *inputs, mqd_t mqd)
+{
+  int i;
+  int status;
+  for (i = 0; i < inputs->n_elem; i++) {
+    printf("message: %s length: %d\n", inputs->data[i], strlen(inputs->data[i]));
+    status = mq_send(mqd, inputs->data[i], 6, 0);
+    if (status == -1) {
+      perror("could not send");
+      exit(-1);
+    }
+    free(inputs->data[i]);
+  }
+  inputs->n_elem = 0;
+
+  return 0;
+}
+
+
 int main1(int argc, char **argv)
 {
+  mqd_t mqd = create_mqueue();
+
   struct inputs_t inputs;
   inputs.n_elem = 0;
   inputs.n_alloc = 0;
@@ -122,6 +173,7 @@ int main1(int argc, char **argv)
   while(1) {
     fgets(input, LINE_LENGTH, stdin);
     if (calc_entered(input)) {
+      add_to_queue(&inputs, mqd);
       printf("calc entered\n");
       break;
     }

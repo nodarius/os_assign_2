@@ -50,11 +50,16 @@ START_TEST(save_input_test)
 struct inputs_t inputs;
 inputs.n_elem = 0;
 inputs.n_alloc = 0;
-char *input = "eminem";
-save_input(&inputs, "eminems");
+char *str = strdup("eminem");
+save_input(&inputs, str);
 ck_assert(inputs.n_elem == 1);
-ck_assert(strcmp(inputs.data[0], input) == 0);
-ck_assert(strcmp(inputs.data[0], "eminem") == 0);
+ck_assert(strcmp(inputs.data[0], str) == 0);
+mqd_t mq = create_mqueue();
+add_to_queue(&inputs, mq);
+str = strdup("eminem");
+save_input(&inputs, str);
+ck_assert(inputs.n_elem == 1);
+ck_assert(strcmp(inputs.data[0], str) == 0);
 }
 END_TEST
 
