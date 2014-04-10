@@ -1,3 +1,4 @@
+#include <semaphore.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -9,7 +10,8 @@
 #include <unistd.h>
 
 const int LINE_LENGTH = 50;
-const char *QUEUE_NAME = "/M_QUEUE";
+const char *QUEUE_NAME = "/M_QUEUE1";
+const char *SEMAPHORE_NAME = "TECH_N9NE";
 const int N_CHILD = 2;
 
 /*
@@ -150,7 +152,6 @@ int add_to_queue(struct inputs_t *inputs, mqd_t mqd)
   int i;
   int status;
   for (i = 0; i < inputs->n_elem; i++) {
-    printf("message: %s length: %d\n", inputs->data[i], strlen(inputs->data[i]));
     status = mq_send(mqd, inputs->data[i], 6, 0);
     if (status == -1) {
       perror("could not send");
@@ -176,7 +177,8 @@ pid_t create_child()
   }
   if (pid == 0) { // child
     char *arg1 = strdup(QUEUE_NAME);
-    char *new_arg[] = {"./child", arg1};
+    char *arg2 = strdup(SEMAPHORE_NAME);
+    char *new_arg[] = {"./child", arg1, arg2};
     char *new_env[] = {NULL};
     execve("child", new_arg, new_env);
     perror("execve"); // execve doesn't return on success
@@ -190,6 +192,12 @@ pid_t create_child()
 int main1(int argc, char **argv)
 {
   mqd_t mqd = create_mqueue();
+  sem_t *sem = sem_open(SEMAPHORE_NAME, O_CREAT, S_IRUSR | S_IWUSR, 1);
+  if (sem == SEM_FAILED) {
+    perror("sem_open");
+    exit(-1);
+  }
+
   pid_t child1 = create_child();
 
 
@@ -201,8 +209,13 @@ int main1(int argc, char **argv)
   while(1) {
     fgets(input, LINE_LENGTH, stdin);
     if (calc_entered(input)) {
+      sem_wait(sem);
+
+      printf("Adding to message queue..");
       add_to_queue(&inputs, mqd);
-      printf("calc entered\n");
+      printf(" Done.\n");
+
+      sem_post(sem);
       break;
     }
     if (valid_input(input)) {
@@ -212,5 +225,10 @@ int main1(int argc, char **argv)
     }
   }
 
+
+  sem_close(sem);
+  sem_unlink(SEMAPHORE_NAME);
+  mq_close(mqd);
+  mq_unlink(QUEUE_NAME);
   return 0;
 }

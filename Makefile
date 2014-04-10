@@ -6,14 +6,14 @@ MASTER=master
 C_SRC=$(wildcard src/child/*.c)
 C_OBJS=$(C_SRC:.c=.o)
 CHILD=child
-LINK=-lrt
+LINK=-lrt -lpthread
 
 all: $(MASTER) $(CHILD)
 
 $(MASTER): $(M_OBJS)
 	$(CC) $(M_OBJS) $(LINK) -o $(MASTER)
 $(CHILD): $(C_OBJS)
-	$(CC) $(C_OBJS) -o $(CHILD)
+	$(CC) $(C_OBJS) $(LINK) -o $(CHILD)
 run:
 	./$(MASTER)
 clean:
