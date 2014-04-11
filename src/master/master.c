@@ -1,3 +1,7 @@
+#include <setjmp.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <signal.h>
 #include <semaphore.h>
 #include <stdio.h>
 #include <string.h>
@@ -13,7 +17,10 @@ const int LINE_LENGTH = 50;
 const char *QUEUE_NAME = "/M_QUEUE12";
 const char *SEMAPHORE_NAME = "TECH_N9NE_1";
 const int N_CHILD = 2;
-
+int n_child = 2;
+pid_t CHILDREN[2];
+static jmp_buf BUF;
+int interrupted = 0;
 /*
  * if input equals "calc" - returns 1
  * else returns 0
@@ -189,17 +196,41 @@ pid_t create_child()
 }
 
 
+
+
+void interrupt()
+{
+  if (n_child == 0) {
+    interrupted = 1;
+    printf("my turn..\n");
+    longjmp(BUF, 1);
+    //    raise(SIGKILL);
+    return;
+  }
+  kill(CHILDREN[--n_child], SIGINT);
+  int status;
+  waitpid(CHILDREN[n_child], &status, 0);
+  printf("child %d killed\n", CHILDREN[n_child]);
+  printf("ouch\n");
+}
+
 int main1(int argc, char **argv)
 {
   mqd_t mqd = create_mqueue();
   sem_t *sem = sem_open(SEMAPHORE_NAME, O_CREAT, S_IRUSR | S_IWUSR, 1);
+
   if (sem == SEM_FAILED) {
     perror("sem_open");
     exit(-1);
   }
 
-  pid_t child1 = create_child();
-  pid_t child2 = create_child();
+  int i; 
+  for (i = 0; i < N_CHILD; i++) {
+    CHILDREN[i] = create_child();
+  }
+  n_child = N_CHILD;
+  
+  signal(SIGINT, interrupt);
 
 
   struct inputs_t inputs;
@@ -207,7 +238,11 @@ int main1(int argc, char **argv)
   inputs.n_alloc = 0;
 
   char input[LINE_LENGTH + 1];
-  while(1) {
+  if(setjmp(BUF)){ 
+    interrupted = 1;
+  }
+  while(1 && !interrupted) {
+    //    if (interrupted) break;
     fgets(input, LINE_LENGTH, stdin);
     if (calc_entered(input)) {
 
