@@ -10,8 +10,8 @@
 #include <unistd.h>
 
 const int LINE_LENGTH = 50;
-const char *QUEUE_NAME = "/M_QUEUE1";
-const char *SEMAPHORE_NAME = "TECH_N9NE";
+const char *QUEUE_NAME = "/M_QUEUE12";
+const char *SEMAPHORE_NAME = "TECH_N9NE_1";
 const int N_CHILD = 2;
 
 /*
@@ -152,7 +152,7 @@ int add_to_queue(struct inputs_t *inputs, mqd_t mqd)
   int i;
   int status;
   for (i = 0; i < inputs->n_elem; i++) {
-    status = mq_send(mqd, inputs->data[i], 6, 0);
+    status = mq_send(mqd, inputs->data[i], strlen(inputs->data[i]) + 1, 0);
     if (status == -1) {
       perror("could not send");
       exit(-1);
@@ -199,6 +199,7 @@ int main1(int argc, char **argv)
   }
 
   pid_t child1 = create_child();
+  pid_t child2 = create_child();
 
 
   struct inputs_t inputs;
@@ -209,6 +210,7 @@ int main1(int argc, char **argv)
   while(1) {
     fgets(input, LINE_LENGTH, stdin);
     if (calc_entered(input)) {
+
       sem_wait(sem);
 
       printf("Adding to message queue..");
@@ -216,12 +218,14 @@ int main1(int argc, char **argv)
       printf(" Done.\n");
 
       sem_post(sem);
+
       break;
     }
     if (valid_input(input)) {
       char *ch = strdup(input);
       save_input(&inputs, ch);
-      printf("valid\n");
+    } else {
+      printf("Invalid input.\n");
     }
   }
 

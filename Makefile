@@ -26,6 +26,7 @@ M_tests:
 	$(CC) -g -I./ src/master/master.c test/master/test_master.c -lcheck -o test/master/master $(LINK)
 
 
+
 M_test:
 	./test/master/master
 
