@@ -219,7 +219,7 @@ int main1(int argc, char **argv)
 
       sem_post(sem);
 
-      break;
+      continue;
     }
     if (valid_input(input)) {
       char *ch = strdup(input);
